@@ -1,0 +1,39 @@
+CC = gcc
+CXX = g++
+CFLAGS = -Wall -Wextra -Werror -std=c17
+CXXFLAGS = -Wall -Wextra -Werror -std=c++20 
+LDFLAGS = -lncurses
+
+TARGET = brickgame
+LIB_DIR = ./lib
+OBJ_DIR = ./obj
+
+$(shell mkdir -p $(LIB_DIR) $(OBJ_DIR))
+
+all: $(TARGET)
+
+$(OBJ_DIR)/frontend.o: ../gui/cli/frontend.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/backend.o: tetris/backend.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/model.o: snake/model.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LIB_DIR)/libfrontend.a: $(OBJ_DIR)/frontend.o
+	ar rcs $@ $^
+
+$(LIB_DIR)/libbackend.a: $(OBJ_DIR)/backend.o $(OBJ_DIR)/model.o
+	ar rcs $@ $^
+
+$(TARGET): cli.cpp $(LIB_DIR)/libfrontend.a $(LIB_DIR)/libbackend.a
+	$(CXX) $(CXXFLAGS) $< -o $@ -L$(LIB_DIR) -lfrontend -lbackend $(LDFLAGS)
+
+clean:
+	rm -rf $(LIB_DIR) $(OBJ_DIR) $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
+.PHONY: all clean
